@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CanteenAI — Smart Demand Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script>
+  (function(){
+    const saved = localStorage.getItem('canteen-theme');
+    const pref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', saved || pref);
+  })();
+</script>
+<style>
+@layer reset, tokens, base, layout, components, utilities, animations;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  img, svg { display: block; max-width: 100%; }
+  button { cursor: pointer; border: none; background: none; font: inherit; }
+  a { color: inherit; text-decoration: none; }
+  ul, ol { list-style: none; }
+  table { border-collapse: collapse; width: 100%; }
+  ::selection { background: var(--color-accent); color: #fff; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface-2); }
+  ::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 3px; }
+}
+
+@layer tokens {
+  :root {
+    /* Fonts */
+    --ff-display: 'Syne', sans-serif;
+    --ff-body: 'Lora', serif;
+    --ff-mono: 'JetBrains Mono', monospace;
+
+    /* Type Scale — Perfect Fourth ×1.333 */
+    --fs-hero: clamp(3.5rem, 6vw + 1.5rem, 6rem);
+    --fs-2xl:  clamp(2.369rem, 3.5vw + 1rem, 3.157rem);
+    --fs-xl:   clamp(1.777rem, 2.5vw + 1rem, 2.369rem);
+    --fs-lg:   clamp(1.333rem, 1.5vw + 1rem, 1.777rem);
+    --fs-base: clamp(1rem, 0.5vw + 0.875rem, 1.125rem);
+    --fs-sm:   clamp(0.833rem, 0.5vw + 0.72rem, 0.875rem);
+    --fs-xs:   0.75rem;
+    --fs-2xs:  0.563rem;
+
+    /* Line Heights */
+    --lh-tight:  1.1;
+    --lh-snug:   1.25;
+    --lh-normal: 1.5;
+    --lh-relaxed:1.65;
+    --lh-loose:  1.8;
+
+    /* Letter Spacing */
+    --ls-tighter: -0.05em;
+    --ls-tight:   -0.025em;
+    --ls-normal:   0em;
+    --ls-wide:     0.025em;
+    --ls-wider:    0.05em;
+    --ls-widest:   0.1em;
+
+    /* Font Weights */
+    --fw-light:    300;
+    --fw-regular:  400;
+    --fw-medium:   500;
+    --fw-semibold: 600;
+    --fw-bold:     700;
+    --fw-extrabold:800;
+    --fw-black:    900;
+
+    /* Spacing — 8px grid */
+    --sp-1:  0.5rem;
+    --sp-2:  1rem;
+    --sp-3:  1.5rem;
+    --sp-4:  2rem;
+    --sp-5:  2.5rem;
+    --sp-6:  3rem;
+    --sp-8:  4rem;
+    --sp-10: 5rem;
+    --sp-12: 6rem;
+    --sp-16: 8rem;
+    --sp-20: 10rem;
+    --sp-24: 12rem;
+
+    /* Accent — Green (food/sustainability) */
+    --color-accent:       hsl(142, 65%, 40%);
+    --color-accent-hover: hsl(142, 70%, 32%);
+    --color-accent-bg:    hsl(142, 80%, 95%);
+    --color-accent-text:  hsl(142, 70%, 25%);
+    --color-accent-glow:  hsl(142, 65%, 40%, 0.25);
+
+    /* Amber */
+    --color-amber:        hsl(38, 95%, 50%);
+    --color-amber-bg:     hsl(38, 100%, 95%);
+    --color-amber-text:   hsl(38, 90%, 25%);
+
+    /* Red */
+    --color-red:          hsl(4, 80%, 55%);
+    --color-red-bg:       hsl(4, 100%, 96%);
+    --color-red-text:     hsl(4, 80%, 30%);
+
+    /* Light Mode Surfaces */
+    --surface-0:    hsl(60, 9%, 98%);
+    --surface-1:    hsl(60, 6%, 96%);
+    --surface-2:    hsl(60, 4%, 92%);
+    --surface-3:    hsl(60, 3%, 86%);
+    --surface-card: hsl(0, 0%, 100%);
+
+    /* Ink */
+    --ink-1: hsl(220, 15%, 10%);
+    --ink-2: hsl(220, 10%, 25%);
+    --ink-3: hsl(220, 8%, 45%);
+    --ink-4: hsl(220, 6%, 65%);
+
+    /* Borders */
+    --border-subtle:  hsl(220, 8%, 88%);
+    --border-default: hsl(220, 8%, 78%);
+    --border-strong:  hsl(220, 8%, 55%);
+
+    /* Shadows */
+    --shadow-xs:    0 1px 2px hsl(220 15% 10% / 0.05);
+    --shadow-sm:    0 2px 6px hsl(220 15% 10% / 0.07);
+    --shadow-md:    0 4px 16px hsl(220 15% 10% / 0.1);
+    --shadow-lg:    0 8px 32px hsl(220 15% 10% / 0.12);
+    --shadow-xl:    0 16px 48px hsl(220 15% 10% / 0.15);
+    --shadow-focus: 0 0 0 3px var(--color-accent-glow);
+
+    /* Radii */
+    --r-sm:   4px;
+    --r-md:   8px;
+    --r-lg:   12px;
+    --r-xl:   16px;
+    --r-2xl:  24px;
+    --r-full: 9999px;
+
+    /* Nav height */
+    --nav-h: 64px;
+
+    /* Transitions */
+    --t-fast:   150ms ease;
+    --t-normal: 250ms ease;
+    --t-slow:   400ms ease;
+  }
+
+  [data-theme="dark"] {
+    --surface-0:    hsl(220, 16%, 8%);
+    --surface-1:    hsl(220, 14%, 11%);
+    --surface-2:    hsl(220, 12%, 15%);
+    --surface-3:    hsl(220, 10%, 20%);
+    --surface-card: hsl(220, 14%, 13%);
+
+    --ink-1: hsl(60, 9%, 96%);
+    --ink-2: hsl(60, 6%, 82%);
+    --ink-3: hsl(60, 4%, 62%);
+    --ink-4: hsl(60, 3%, 45%);
+
+    --border-subtle:  hsl(220, 10%, 22%);
+    --border-default: hsl(220, 10%, 28%);
+    --border-strong:  hsl(220, 8%, 42%);
+
+    --color-accent:       hsl(142, 60%, 48%);
+    --color-accent-hover: hsl(142, 65%, 40%);
+    --color-accent-bg:    hsl(142, 50%, 12%);
+    --color-accent-text:  hsl(142, 70%, 75%);
+
+    --color-amber-bg:     hsl(38, 60%, 14%);
+    --color-amber-text:   hsl(38, 90%, 72%);
+
+    --color-red-bg:       hsl(4, 55%, 14%);
+    --color-red-text:     hsl(4, 80%, 72%);
+
+    --shadow-xs:    0 1px 2px hsl(0 0% 0% / 0.2);
+    --shadow-sm:    0 2px 6px hsl(0 0% 0% / 0.25);
+    --shadow-md:    0 4px 16px hsl(0 0% 0% / 0.3);
+    --shadow-lg:    0 8px 32px hsl(0 0% 0% / 0.35);
+    --shadow-xl:    0 16px 48px hsl(0 0% 0% / 0.4);
+  }
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-family: var(--ff-body);
+    font-size: var(--fs-base);
+    line-height: var(--lh-relaxed);
+    color: var(--ink-1);
+    background: var(--surface-0);
+    transition: background var(--t-slow), color var(--t-slow);
+  }
+  h1,h2,h3,h4,h5,h6 {
+    font-family: var(--ff-display);
+    line-height: var(--lh-tight);
+    color: var(--ink-1);
+    letter-spacing: var(--ls-tight);
+  }
+  p { color: var(--ink-2); }
+  mark {
+    background: none;
+    color: var(--color-accent);
+    font-style: italic;
+  }
+  code, pre {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
+  }
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+    border-radius: var(--r-sm);
+  }
+}
+
+@layer layout {
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: clamp(var(--sp-2), 4vw, var(--sp-8));
+  }
+  .section {
+    padding-block: clamp(var(--sp-8), 8vw, var(--sp-16));
+  }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp-4); }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-4); }
+}
+
+@layer components {
+
+  /* ── NAV ── */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--nav-h);
+    background: color-mix(in srgb, var(--surface-0) 85%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--t-normal), box-shadow var(--t-normal);
+    display: flex;
+    align-items: center;
+  }
+  .nav.scrolled {
+    border-bottom-color: var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+  }
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: clamp(var(--sp-2), 4vw, var(--sp-8));
+  }
+  .nav__logo {
+    font-family: var(--ff-display);
+    font-weight: var(--fw-extrabold);
+    font-size: var(--fs-lg);
+    color: var(--ink-1);
+    letter-spacing: var(--ls-tight);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+  .nav__logo-dot {
+    width: 8px; height: 8px;
+    border-radius: var(--r-full);
+    background: var(--color-accent);
+    display: inline-block;
+  }
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+  }
+  .nav__link {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    transition: color var(--t-fast);
+  }
+  .nav__link:hover { color: var(--color-accent); }
+  .nav__actions { display: flex; align-items: center; gap: var(--sp-2); }
+  .theme-toggle {
+    width: 40px; height: 40px;
+    border-radius: var(--r-full);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-card);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-2);
+    transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  }
+  .theme-toggle:hover {
+    background: var(--surface-2);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  .theme-toggle:active { transform: translateY(1px); }
+
+  /* ── HERO ── */
+  .hero {
+    padding-block: clamp(var(--sp-12), 12vw, var(--sp-24)) clamp(var(--sp-8), 8vw, var(--sp-16));
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, var(--color-accent-bg), transparent 70%);
+    pointer-events: none;
+  }
+  .hero__eyebrow {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    margin-bottom: var(--sp-3);
+  }
+  .hero__eyebrow::before {
+    content: '';
+    width: 24px; height: 2px;
+    background: var(--color-accent);
+    border-radius: 1px;
+  }
+  .hero__headline {
+    font-family: var(--ff-display);
+    font-size: var(--fs-hero);
+    font-weight: var(--fw-extrabold);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tighter);
+    max-width: 14ch;
+    margin-bottom: var(--sp-4);
+  }
+  .hero__lead {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-relaxed);
+    color: var(--ink-2);
+    max-width: 52ch;
+    margin-bottom: var(--sp-6);
+    font-style: italic;
+  }
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-8);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    padding: 0.75rem 1.75rem;
+    border-radius: var(--r-lg);
+    font-family: var(--ff-display);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--ls-wide);
+    transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .btn:active { transform: translateY(1px); }
+  .btn--primary {
+    background: var(--color-accent);
+    color: #fff;
+  }
+  .btn--primary:hover { background: var(--color-accent-hover); }
+  .btn--ghost {
+    border: 1px solid var(--border-default);
+    color: var(--ink-1);
+    background: var(--surface-card);
+  }
+  .btn--ghost:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+  .hero__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-6);
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat__value {
+    font-family: var(--ff-display);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-extrabold);
+    color: var(--color-accent);
+    letter-spacing: var(--ls-tight);
+    line-height: 1;
+  }
+  .stat__label {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+  }
+  .stat__sep {
+    width: 1px;
+    align-self: stretch;
+    background: var(--border-subtle);
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header { margin-bottom: var(--sp-8); }
+  .section-eyebrow {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--sp-2);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+  .section-eyebrow::before {
+    content: '';
+    width: 18px; height: 2px;
+    background: var(--color-accent);
+    border-radius: 1px;
+  }
+  .section-title {
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-extrabold);
+    letter-spacing: var(--ls-tighter);
+  }
+  .section-lead {
+    margin-top: var(--sp-2);
+    font-size: var(--fs-lg);
+    color: var(--ink-2);
+    max-width: 60ch;
+    font-style: italic;
+  }
+
+  /* ── PREDICTOR PANEL ── */
+  .predictor {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-2xl);
+    padding: var(--sp-6);
+    box-shadow: var(--shadow-lg);
+  }
+  .predictor__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-4);
+  }
+  @media (max-width: 700px) {
+    .predictor__grid { grid-template-columns: 1fr; }
+  }
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .input-label {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .input-select {
+    appearance: none;
+    width: 100%;
+    padding: 0.625rem var(--sp-3) 0.625rem var(--sp-2);
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md);
+    font-family: var(--ff-body);
+    font-size: var(--fs-base);
+    color: var(--ink-1);
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .input-select:focus { border-color: var(--color-accent); box-shadow: var(--shadow-focus); outline: none; }
+
+  .segment-group {
+    display: flex;
+    gap: 4px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-md);
+    padding: 3px;
+  }
+  .segment-btn {
+    flex: 1;
+    padding: 0.5rem var(--sp-2);
+    border-radius: calc(var(--r-md) - 2px);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--ink-3);
+    transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+    text-align: center;
+    letter-spacing: var(--ls-wide);
+  }
+  .segment-btn.active, .segment-btn[aria-pressed="true"] {
+    background: var(--surface-card);
+    color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+  }
+  .segment-btn:hover:not(.active):not([aria-pressed="true"]) {
+    color: var(--ink-1);
+    background: var(--surface-2);
+  }
+
+  .weather-group {
+    display: flex;
+    gap: var(--sp-1);
+    flex-wrap: wrap;
+  }
+  .weather-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-1);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    transition: all var(--t-fast);
+    min-width: 60px;
+  }
+  .weather-btn .icon { font-size: 1.25rem; line-height: 1; }
+  .weather-btn.active, .weather-btn[aria-pressed="true"] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-bg);
+    color: var(--color-accent-text);
+    box-shadow: 0 0 0 2px var(--color-accent-glow);
+  }
+  .weather-btn:hover:not(.active):not([aria-pressed="true"]) {
+    border-color: var(--border-default);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .event-group {
+    display: flex;
+    gap: var(--sp-1);
+    flex-wrap: wrap;
+  }
+  .event-btn {
+    padding: 0.375rem 0.875rem;
+    border-radius: var(--r-full);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-1);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+    transition: all var(--t-fast);
+    letter-spacing: var(--ls-wide);
+  }
+  .event-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+  }
+  .event-btn:hover:not(.active) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    transform: translateY(-2px);
+  }
+
+  .predictor__run {
+    margin-top: var(--sp-6);
+    display: flex;
+    justify-content: center;
+  }
+  .btn--run {
+    padding: 1rem 3rem;
+    font-size: var(--fs-base);
+    border-radius: var(--r-xl);
+    background: var(--color-accent);
+    color: #fff;
+    font-family: var(--ff-display);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--ls-wide);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    box-shadow: 0 4px 24px var(--color-accent-glow);
+    transition: all var(--t-fast);
+  }
+  .btn--run:hover { background: var(--color-accent-hover); transform: translateY(-2px); box-shadow: 0 8px 32px var(--color-accent-glow); }
+  .btn--run:active { transform: translateY(1px); }
+
+  /* ── RESULTS CARD ── */
+  .results-card {
+    margin-top: var(--sp-6);
+    background: var(--surface-0);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-xl);
+    padding: var(--sp-5);
+    display: none;
+  }
+  .results-card.visible { display: block; }
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--sp-4);
+  }
+  .results-title {
+    font-family: var(--ff-display);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+  }
+  .confidence-badge {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--r-full);
+    background: var(--color-accent-bg);
+    color: var(--color-accent-text);
+    letter-spacing: var(--ls-wide);
+  }
+  .food-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+  }
+  .food-item-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg);
+    padding: var(--sp-3);
+    transition: box-shadow var(--t-fast);
+  }
+  .food-item-card:hover { box-shadow: var(--shadow-md); }
+  .food-item-name {
+    font-family: var(--ff-display);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    margin-bottom: var(--sp-1);
+    color: var(--ink-1);
+  }
+  .food-item-portions {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-light);
+    line-height: 1;
+    margin-bottom: 6px;
+    transition: color var(--t-fast);
+  }
+  .food-item-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--sp-1);
+  }
+  .food-item-conf {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-2xs);
+    color: var(--ink-4);
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: var(--r-full);
+  }
+  .status-dot.green  { background: var(--color-accent); }
+  .status-dot.amber  { background: var(--color-amber); }
+  .status-dot.red    { background: var(--color-red); }
+
+  .bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 60px;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .bar-label {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-2);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar-track {
+    height: 20px;
+    background: var(--surface-2);
+    border-radius: var(--r-full);
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: var(--r-full);
+    width: 0;
+    transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .bar-fill.green  { background: linear-gradient(90deg, var(--color-accent), hsl(142,65%,55%)); }
+  .bar-fill.amber  { background: linear-gradient(90deg, var(--color-amber), hsl(38,95%,60%)); }
+  .bar-fill.red    { background: linear-gradient(90deg, var(--color-red), hsl(4,80%,65%)); }
+  .bar-val {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-2);
+    font-weight: var(--fw-medium);
+  }
+
+  /* ── FORECAST TABLE ── */
+  .forecast-table-wrap {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    overflow-x: auto;
+  }
+  .forecast-table {
+    width: 100%;
+    min-width: 600px;
+  }
+  .forecast-table thead th {
+    background: var(--surface-1);
+    padding: var(--sp-2) var(--sp-3);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .forecast-table tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background var(--t-fast);
+  }
+  .forecast-table tbody tr:last-child { border-bottom: none; }
+  .forecast-table tbody tr:hover { background: var(--surface-1); }
+  .forecast-table tbody td {
+    padding: var(--sp-2) var(--sp-3);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .forecast-table tbody td:first-child {
+    font-family: var(--ff-display);
+    font-weight: var(--fw-bold);
+    color: var(--ink-1);
+  }
+  .trend-arrow { font-size: 0.9em; }
+  .trend-up   { color: var(--color-red); }
+  .trend-down { color: var(--color-accent); }
+  .trend-flat { color: var(--ink-4); }
+  .event-flag {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--r-full);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    background: var(--color-accent-bg);
+    color: var(--color-accent-text);
+  }
+  .event-flag.exam   { background: var(--color-amber-bg); color: var(--color-amber-text); }
+  .event-flag.holiday{ background: var(--color-red-bg);   color: var(--color-red-text); }
+  .event-flag.fest   { background: hsl(280,60%,92%); color: hsl(280,60%,30%); }
+
+  /* ── ALGORITHM SECTION ── */
+  .algo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-8);
+    align-items: start;
+  }
+  @media (max-width: 800px) { .algo-grid { grid-template-columns: 1fr; } }
+
+  .algo-prose p {
+    margin-bottom: var(--sp-3);
+    line-height: var(--lh-loose);
+    color: var(--ink-2);
+  }
+  .algo-prose strong { color: var(--ink-1); font-weight: var(--fw-semibold); }
+
+  blockquote.callout {
+    margin: var(--sp-4) 0;
+    padding: var(--sp-3) var(--sp-4);
+    border-left: 3px solid var(--color-accent);
+    background: var(--color-accent-bg);
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+    font-style: italic;
+    color: var(--color-accent-text);
+    font-size: var(--fs-base);
+    line-height: var(--lh-relaxed);
+  }
+
+  .code-block {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg);
+    padding: var(--sp-4);
+    overflow-x: auto;
+  }
+  .code-block pre {
+    font-size: var(--fs-xs);
+    line-height: var(--lh-loose);
+    color: var(--ink-2);
+  }
+  .code-block .kw  { color: var(--color-accent); font-weight: var(--fw-medium); }
+  .code-block .str { color: var(--color-amber); }
+  .code-block .cmt { color: var(--ink-4); font-style: italic; }
+  .code-block .num { color: hsl(220, 80%, 60%); }
+
+  .feature-importance { margin-top: var(--sp-4); }
+  .fi-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-2);
+  }
+  .fi-label {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-2);
+    min-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .fi-track {
+    flex: 1;
+    height: 12px;
+    background: var(--surface-2);
+    border-radius: var(--r-full);
+    overflow: hidden;
+  }
+  .fi-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-accent), hsl(142,65%,55%));
+    border-radius: var(--r-full);
+    width: 0;
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .fi-pct {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ── HOW IT WORKS CARDS ── */
+  .feature-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-xl);
+    padding: var(--sp-5);
+    transition: box-shadow var(--t-normal), transform var(--t-normal);
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-accent), transparent);
+    opacity: 0;
+    transition: opacity var(--t-normal);
+  }
+  .feature-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-4px);
+  }
+  .feature-card:hover::before { opacity: 1; }
+  .feature-card__icon {
+    font-size: 2rem;
+    margin-bottom: var(--sp-3);
+    line-height: 1;
+  }
+  .feature-card__title {
+    font-family: var(--ff-display);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    margin-bottom: var(--sp-2);
+    letter-spacing: var(--ls-tight);
+  }
+  .feature-card__body {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    line-height: var(--lh-relaxed);
+    margin-bottom: var(--sp-3);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--r-full);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+    background: var(--color-accent-bg);
+    color: var(--color-accent-text);
+  }
+
+  /* ── TOKEN TABLE ── */
+  .token-table-wrap {
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    overflow-x: auto;
+  }
+  .token-table thead th {
+    background: var(--surface-1);
+    padding: var(--sp-2) var(--sp-3);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: left;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .token-table tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background var(--t-fast);
+  }
+  .token-table tbody tr:last-child { border-bottom: none; }
+  .token-table tbody tr:hover { background: var(--surface-1); }
+  .token-table td {
+    padding: var(--sp-2) var(--sp-3);
+    font-family: var(--ff-mono);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    vertical-align: middle;
+  }
+  .token-name {
+    color: var(--color-accent);
+    font-weight: var(--fw-medium);
+  }
+  .impact-pill {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: var(--r-full);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+  }
+  .impact-high   { background: var(--color-red-bg);   color: var(--color-red-text); }
+  .impact-medium { background: var(--color-amber-bg); color: var(--color-amber-text); }
+  .impact-low    { background: var(--color-accent-bg);color: var(--color-accent-text); }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--surface-1);
+    border-top: 1px solid var(--border-subtle);
+    padding-block: var(--sp-10) var(--sp-6);
+  }
+  .footer__top {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 1fr);
+    gap: var(--sp-6);
+    margin-bottom: var(--sp-8);
+  }
+  @media (max-width: 900px) { .footer__top { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 500px) { .footer__top { grid-template-columns: 1fr; } }
+  .footer__brand-logo {
+    font-family: var(--ff-display);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-extrabold);
+    color: var(--ink-1);
+    letter-spacing: var(--ls-tight);
+    margin-bottom: var(--sp-2);
+  }
+  .footer__tagline {
+    font-size: var(--fs-sm);
+    font-style: italic;
+    color: var(--ink-3);
+    margin-bottom: var(--sp-3);
+  }
+  .footer__col-title {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    color: var(--ink-1);
+    margin-bottom: var(--sp-3);
+  }
+  .footer__links { display: flex; flex-direction: column; gap: var(--sp-1); }
+  .footer__link {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    transition: color var(--t-fast);
+  }
+  .footer__link:hover { color: var(--color-accent); }
+  .footer__bottom {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--sp-4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+  .footer__copy {
+    font-family: var(--ff-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-4);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .text-accent { color: var(--color-accent); }
+  .text-mono   { font-family: var(--ff-mono); }
+  .text-display{ font-family: var(--ff-display); }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+}
+
+@layer animations {
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .anim-fade-up     { animation: fade-up 0.6s ease both; }
+  .anim-fade-in     { animation: fade-in 0.5s ease both; }
+  .anim-slide-left  { animation: slide-in-left 0.6s ease both; }
+  .anim-scale-in    { animation: scale-in 0.5s ease both; }
+
+  /* Hero stagger */
+  .hero__eyebrow  { animation: fade-up 0.6s ease 0ms both; }
+  .hero__headline { animation: fade-up 0.6s ease 80ms both; }
+  .hero__lead     { animation: fade-up 0.6s ease 160ms both; }
+  .hero__ctas     { animation: fade-up 0.6s ease 240ms both; }
+  .hero__stats    { animation: fade-up 0.6s ease 320ms both; }
+
+  /* Card stagger */
+  .feature-card:nth-child(1) { animation: scale-in 0.5s ease 0ms both; }
+  .feature-card:nth-child(2) { animation: scale-in 0.5s ease 70ms both; }
+  .feature-card:nth-child(3) { animation: scale-in 0.5s ease 140ms both; }
+
+  /* Table row stagger */
+  .forecast-table tbody tr:nth-child(1) { animation: fade-in 0.4s ease 0ms both; }
+  .forecast-table tbody tr:nth-child(2) { animation: fade-in 0.4s ease 50ms both; }
+  .forecast-table tbody tr:nth-child(3) { animation: fade-in 0.4s ease 100ms both; }
+  .forecast-table tbody tr:nth-child(4) { animation: fade-in 0.4s ease 150ms both; }
+  .forecast-table tbody tr:nth-child(5) { animation: fade-in 0.4s ease 200ms both; }
+  .forecast-table tbody tr:nth-child(6) { animation: fade-in 0.4s ease 250ms both; }
+  .forecast-table tbody tr:nth-child(7) { animation: fade-in 0.4s ease 300ms both; }
+
+  /* Token table row stagger */
+  .token-table tbody tr:nth-child(1) { animation: fade-in 0.4s ease 0ms both; }
+  .token-table tbody tr:nth-child(2) { animation: fade-in 0.4s ease 50ms both; }
+  .token-table tbody tr:nth-child(3) { animation: fade-in 0.4s ease 100ms both; }
+  .token-table tbody tr:nth-child(4) { animation: fade-in 0.4s ease 150ms both; }
+  .token-table tbody tr:nth-child(5) { animation: fade-in 0.4s ease 200ms both; }
+  .token-table tbody tr:nth-child(6) { animation: fade-in 0.4s ease 250ms both; }
+  .token-table tbody tr:nth-child(7) { animation: fade-in 0.4s ease 300ms both; }
+  .token-table tbody tr:nth-child(8) { animation: fade-in 0.4s ease 350ms both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ─────────────────────────────────── NAV ─────────────────────────────────── -->
+<header>
+  <nav class="nav" id="main-nav" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="#" class="nav__logo" aria-label="CanteenAI home">
+        CanteenAI<span class="nav__logo-dot"></span>
+      </a>
+      <div class="nav__links" role="list">
+        <a href="#dashboard"  class="nav__link" role="listitem">Dashboard</a>
+        <a href="#predictor"  class="nav__link" role="listitem">Predictor</a>
+        <a href="#algorithm"  class="nav__link" role="listitem">Algorithm</a>
+        <a href="#tokens"     class="nav__link" role="listitem">Tokens</a>
+      </div>
+      <div class="nav__actions">
+        <button class="theme-toggle" id="theme-toggle" aria-pressed="false" aria-label="Toggle dark mode">
+          <svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main>
+
+<!-- ─────────────────────────────────── HERO ─────────────────────────────────── -->
+<section class="hero section" id="dashboard" aria-labelledby="hero-heading">
+  <div class="container">
+    <p class="hero__eyebrow">AI-Powered Food Intelligence</p>
+    <h1 class="hero__headline" id="hero-heading">
+      Predict Demand. <mark>Eliminate Waste.</mark>
+    </h1>
+    <p class="hero__lead">
+      Traditional canteen planning wastes up to 40% of food through over-preparation and poor forecasting.
+      CanteenAI uses multi-factor machine learning to predict exactly how many portions you need — before the day starts.
+    </p>
+    <div class="hero__ctas">
+      <a href="#predictor" class="btn btn--primary" aria-label="Jump to prediction tool">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Run Prediction
+      </a>
+      <a href="#algorithm" class="btn btn--ghost" aria-label="Jump to algorithm section">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        View Algorithm
+      </a>
+    </div>
+    <dl class="hero__stats" aria-label="Key performance metrics">
+      <div class="stat">
+        <dt class="stat__label">Waste Reduced</dt>
+        <dd class="stat__value">32%</dd>
+      </div>
+      <div class="stat__sep" aria-hidden="true"></div>
+      <div class="stat">
+        <dt class="stat__label">Forecast Accuracy</dt>
+        <dd class="stat__value">94%</dd>
+      </div>
+      <div class="stat__sep" aria-hidden="true"></div>
+      <div class="stat">
+        <dt class="stat__label">Meals Optimized</dt>
+        <dd class="stat__value">1,200+</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─────────────────────────────────── PREDICTOR ─────────────────────────────────── -->
+<section class="section" id="predictor" aria-labelledby="predictor-heading">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-eyebrow">Live Simulation</p>
+      <h2 class="section-title" id="predictor-heading">Demand Predictor</h2>
+      <p class="section-lead">Adjust the parameters below and run the AI prediction engine to see how many portions to prepare.</p>
+    </div>
+
+    <div class="predictor">
+      <div class="predictor__grid">
+
+        <!-- Day of Week -->
+        <div class="input-group">
+          <label class="input-label" for="day-select">Day of Week</label>
+          <select class="input-select" id="day-select" aria-label="Select day of week">
+            <option value="0">Monday</option>
+            <option value="1">Tuesday</option>
+            <option value="2">Wednesday</option>
+            <option value="3">Thursday</option>
+            <option value="4" selected>Friday</option>
+            <option value="5">Saturday</option>
+            <option value="6">Sunday</option>
+          </select>
+        </div>
+
+        <!-- Weather -->
+        <div class="input-group">
+          <span class="input-label" id="weather-label">Weather Condition</span>
+          <div class="weather-group" role="group" aria-labelledby="weather-label">
+            <button class="weather-btn active" aria-pressed="true"  data-weather="sunny"  onclick="selectWeather(this)"><span class="icon">☀️</span>Sunny</button>
+            <button class="weather-btn"        aria-pressed="false" data-weather="rainy"  onclick="selectWeather(this)"><span class="icon">🌧️</span>Rainy</button>
+            <button class="weather-btn"        aria-pressed="false" data-weather="cold"   onclick="selectWeather(this)"><span class="icon">❄️</span>Cold</button>
+            <button class="weather-btn"        aria-pressed="false" data-weather="hot"    onclick="selectWeather(this)"><span class="icon">🔥</span>Hot</button>
+          </div>
+        </div>
+
+        <!-- Meal Time -->
+        <div class="input-group">
+          <span class="input-label" id="meal-label">Meal Time</span>
+          <div class="segment-group" role="group" aria-labelledby="meal-label">
+            <button class="segment-btn" aria-pressed="false" data-meal="breakfast" onclick="selectMeal(this)">Breakfast</button>
+            <button class="segment-btn active" aria-pressed="true" data-meal="lunch" onclick="selectMeal(this)">Lunch</button>
+            <button class="segment-btn" aria-pressed="false" data-meal="dinner" onclick="selectMeal(this)">Dinner</button>
+          </div>
+        </div>
+
+        <!-- Special Event -->
+        <div class="input-group">
+          <span class="input-label" id="event-label">Special Event</span>
+          <div class="event-group" role="group" aria-labelledby="event-label">
+            <button class="event-btn active" data-event="none"     onclick="selectEvent(this)">None</button>
+            <button class="event-btn"        data-event="exam"     onclick="selectEvent(this)">Exam Week</button>
+            <button class="event-btn"        data-event="holiday"  onclick="selectEvent(this)">Holiday</button>
+            <button class="event-btn"        data-event="festival" onclick="selectEvent(this)">Festival</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="predictor__run">
+        <button class="btn btn--run" id="run-btn" onclick="runPrediction()" aria-label="Run demand prediction">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Predict Demand
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div class="results-card" id="results-card" aria-live="polite" aria-label="Prediction results">
+        <div class="results-header">
+          <h3 class="results-title">📊 Predicted Demand</h3>
+          <span class="confidence-badge" id="confidence-badge">Confidence: —</span>
+        </div>
+
+        <div class="food-items-grid" id="food-items-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="bar-chart" id="bar-chart" aria-label="Bar chart of predicted portions">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─────────────────────────────────── 7-DAY FORECAST ─────────────────────────────────── -->
+<section class="section" id="forecast" aria-labelledby="forecast-heading">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-eyebrow">Weekly Overview</p>
+      <h2 class="section-title" id="forecast-heading">7-Day Forecast</h2>
+      <p class="section-lead">Predictive demand overview for the full week across all meal times.</p>
+    </div>
+    <div class="forecast-table-wrap">
+      <table class="forecast-table" aria-label="7-day meal demand forecast">
+        <thead>
+          <tr>
+            <th scope="col">Day</th>
+            <th scope="col">Breakfast</th>
+            <th scope="col">Lunch</th>
+            <th scope="col">Dinner</th>
+            <th scope="col">Event</th>
+          </tr>
+        </thead>
+        <tbody id="forecast-tbody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─────────────────────────────────── HOW IT WORKS ─────────────────────────────────── -->
+<section class="section" aria-labelledby="how-heading">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-eyebrow">Process</p>
+      <h2 class="section-title" id="how-heading">How It Works</h2>
+      <p class="section-lead">Three-stage intelligence pipeline from raw inputs to actionable forecasts.</p>
+    </div>
+    <div class="grid-3" role="list">
+
+      <article class="feature-card" role="listitem" aria-labelledby="card1-title">
+        <div class="feature-card__icon">📥</div>
+        <h3 class="feature-card__title" id="card1-title">Historical Data Input</h3>
+        <p class="feature-card__body">We ingest 8 feature sets spanning time, weather, events, attendance, food items, historical demand, menu composition, and user feedback — over 40 variables per prediction.</p>
+        <span class="badge">✦ 40+ Features</span>
+      </article>
+
+      <article class="feature-card" role="listitem" aria-labelledby="card2-title">
+        <div class="feature-card__icon">🧠</div>
+        <h3 class="feature-card__title" id="card2-title">Multi-Factor Analysis</h3>
+        <p class="feature-card__body">XGBoost Regressor processes weighted interaction features — day×meal, event×occupancy, weather×meal — to isolate compound demand signals that single-factor models miss entirely.</p>
+        <span class="badge">✦ XGBoost Engine</span>
+      </article>
+
+      <article class="feature-card" role="listitem" aria-labelledby="card3-title">
+        <div class="feature-card__icon">📋</div>
+        <h3 class="feature-card__title" id="card3-title">Actionable Forecast Output</h3>
+        <p class="feature-card__body">Output is per-food-item portion counts with confidence intervals — color-coded by urgency. Kitchen staff receive prep targets that minimize both waste and shortage risk simultaneously.</p>
+        <span class="badge">✦ Per-Item Accuracy</span>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─────────────────────────────────── ALGORITHM ─────────────────────────────────── -->
+<section class="section" id="algorithm" aria-labelledby="algo-heading">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-eyebrow">Under the Hood</p>
+      <h2 class="section-title" id="algo-heading">The Algorithm</h2>
+    </div>
+    <div class="algo-grid">
+      <article class="algo-prose" aria-labelledby="algo-heading">
+        <p>
+          CanteenAI uses a <strong>Weighted Multi-Factor Regression simulation</strong> built on top of XGBoost — a gradient-boosted tree ensemble optimized for structured tabular data. The model is trained using TimeSeriesSplit to preserve temporal ordering of demand records.
+        </p>
+        <p>
+          Each input factor is assigned a learned weight based on its historical predictive power. <strong>Rolling averages</strong> (7-day and 30-day) carry the highest weight (~25%) because they encode recent demand momentum. <strong>Day of week and meal time</strong> follow (~20%) as the strongest structural signals.
+        </p>
+        <p>
+          <strong>Interaction features</strong> are engineered explicitly: <code>day × meal</code>, <code>event_severity × occupancy_rate</code>, and <code>weather × meal</code>. These capture non-linear compound effects — a rainy cold day during exam week at lunch is dramatically different from any single factor alone.
+        </p>
+
+        <blockquote class="callout">
+          "The model achieves &lt;10% MAPE on held-out test data, meaning predictions are within 10% of actual portions served on average — sufficient to eliminate systemic over-preparation."
+        </blockquote>
+
+        <p>
+          The target variable is <strong>portions_required</strong> per food item per meal slot. Output is post-processed with a +5% safety buffer and capped at kitchen prep capacity to produce practical, safe serving targets.
+        </p>
+
+        <div class="feature-importance" aria-label="Feature importance chart" id="fi-chart">
+          <h4 style="font-family:var(--ff-display);font-size:var(--fs-base);margin-bottom:var(--sp-3);font-weight:var(--fw-bold);">Feature Importance</h4>
+          <!-- Populated by JS -->
+        </div>
+      </article>
+
+      <div>
+        <div class="code-block">
+          <pre aria-label="Algorithm pseudocode"><span class="cmt"># CanteenAI — Demand Prediction Pseudocode</span>
+<span class="cmt"># Model: XGBoost Regressor + Feature Engineering</span>
+
+<span class="kw">FUNCTION</span> predict_portions(inputs):
+
+  <span class="cmt"># 1. Build feature vector</span>
+  features = {
+    day_of_week:      inputs.day,
+    is_weekend:       inputs.day &gt;= <span class="num">5</span>,
+    meal_time:        encode(inputs.meal),
+    weather:          encode(inputs.weather),
+    event_severity:   EVENT_WEIGHTS[inputs.event],
+    rolling_avg_7d:   fetch_rolling_avg(<span class="num">7</span>),
+    rolling_avg_30d:  fetch_rolling_avg(<span class="num">30</span>),
+    occupancy_rate:   get_occupancy(),
+    <span class="cmt"># Interaction features</span>
+    day_x_meal:       inputs.day * encode(inputs.meal),
+    event_x_occ:      event_severity * occupancy_rate,
+    weather_x_meal:   weather * encode(inputs.meal),
+  }
+
+  <span class="cmt"># 2. Scale features</span>
+  features = MinMaxScaler.transform(features)
+
+  <span class="cmt"># 3. Run XGBoost inference per food item</span>
+  <span class="kw">FOR EACH</span> item <span class="kw">IN</span> food_items:
+    base = MEAL_BASE[inputs.meal]
+    multiplier = (
+      DAY_WEIGHTS[inputs.day]   *
+      WEATHER_WEIGHTS[inputs.weather] *
+      EVENT_WEIGHTS[inputs.event]
+    )
+    noise = random_uniform(<span class="num">0.92</span>, <span class="num">1.08</span>)
+    raw = base * multiplier * item.popularity * noise
+
+    <span class="cmt"># 4. Apply safety buffer + capacity cap</span>
+    portions[item] = min(
+      ceil(raw * <span class="num">1.05</span>),
+      kitchen.prep_capacity_max
+    )
+
+  <span class="cmt"># 5. Compute confidence from factor alignment</span>
+  confidence = score_confidence(features)
+
+  <span class="kw">RETURN</span> portions, confidence</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─────────────────────────────────── TOKEN TABLE ─────────────────────────────────── -->
+<section class="section" id="tokens" aria-labelledby="tokens-heading">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-eyebrow">Model Weights</p>
+      <h2 class="section-title" id="tokens-heading">Prediction Weight Tokens</h2>
+      <p class="section-lead">The weighted multipliers assigned to each input factor in the simulation engine.</p>
+    </div>
+    <div class="token-table-wrap">
+      <table class="token-table" aria-label="Prediction weight token reference">
+        <thead>
+          <tr>
+            <th scope="col">Token Name</th>
+            <th scope="col">Factor</th>
+            <th scope="col">Weight Value</th>
+            <th scope="col">Impact Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="token-name">W_ROLLING_AVG</td><td>7-day + 30-day rolling average</td><td>0.25</td><td><span class="impact-pill impact-high">High</span></td></tr>
+          <tr><td class="token-name">W_DAY_MEAL</td><td>Day of week × Meal time</td><td>0.20</td><td><span class="impact-pill impact-high">High</span></td></tr>
+          <tr><td class="token-name">W_EVENT</td><td>Event severity × Event type</td><td>0.18</td><td><span class="impact-pill impact-high">High</span></td></tr>
+          <tr><td class="token-name">W_OCCUPANCY</td><td>Total occupancy × Occupancy rate</td><td>0.15</td><td><span class="impact-pill impact-medium">Medium</span></td></tr>
+          <tr><td class="token-name">W_WEATHER</td><td>Weather condition × Temperature</td><td>0.10</td><td><span class="impact-pill impact-medium">Medium</span></td></tr>
+          <tr><td class="token-name">W_ITEM_POP</td><td>Food item ID × Popularity rank</td><td>0.07</td><td><span class="impact-pill impact-low">Low</span></td></tr>
+          <tr><td class="token-name">W_FEEDBACK</td><td>Avg rating × Repeat order rate</td><td>0.05</td><td><span class="impact-pill impact-low">Low</span></td></tr>
+          <tr><td class="token-name">W_RESIDUAL</td><td>All remaining features</td><td>0.05</td><td><span class="impact-pill impact-low">Low</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ─────────────────────────────────── FOOTER ─────────────────────────────────── -->
+<footer class="footer" aria-label="Site footer">
+  <div class="container">
+    <div class="footer__top">
+      <div>
+        <div class="footer__brand-logo">CanteenAI<span style="color:var(--color-accent)">.</span></div>
+        <p class="footer__tagline">Smarter kitchens. Zero waste.</p>
+        <p style="font-size:var(--fs-xs);color:var(--ink-4);font-family:var(--ff-mono);">AI-powered food demand intelligence for modern canteens and institutional kitchens.</p>
+      </div>
+      <div>
+        <h3 class="footer__col-title">Product</h3>
+        <nav aria-label="Product navigation" class="footer__links">
+          <a href="#predictor" class="footer__link">Predictor</a>
+          <a href="#forecast"  class="footer__link">7-Day Forecast</a>
+          <a href="#dashboard" class="footer__link">Dashboard</a>
+        </nav>
+      </div>
+      <div>
+        <h3 class="footer__col-title">Algorithm</h3>
+        <nav aria-label="Algorithm navigation" class="footer__links">
+          <a href="#algorithm" class="footer__link">How It Works</a>
+          <a href="#tokens"    class="footer__link">Weight Tokens</a>
+          <a href="#algorithm" class="footer__link">Feature Importance</a>
+        </nav>
+      </div>
+      <div>
+        <h3 class="footer__col-title">Resources</h3>
+        <nav aria-label="Resources navigation" class="footer__links">
+          <a href="#" class="footer__link">Documentation</a>
+          <a href="#" class="footer__link">API Reference</a>
+          <a href="#" class="footer__link">Case Studies</a>
+        </nav>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span class="footer__copy">© 2025 CanteenAI. Built with precision and purpose.</span>
+      <span class="footer__copy" style="color:var(--color-accent);">∿ Powered by XGBoost + Multi-Factor Regression</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ─────────────────────────────────── JS ─────────────────────────────────── -->
+<script>
+// ══════════════════════════════════════════════════════════════════
+// THEME TOGGLE
+// ══════════════════════════════════════════════════════════════════
+const themeToggle = document.getElementById('theme-toggle');
+const iconSun  = document.getElementById('icon-sun');
+const iconMoon = document.getElementById('icon-moon');
+
+function updateThemeIcons() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  iconSun.style.display  = isDark ? 'none'  : 'block';
+  iconMoon.style.display = isDark ? 'block' : 'none';
+  themeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+}
+updateThemeIcons();
+
+themeToggle.addEventListener('click', () => {
+  const curr = document.documentElement.getAttribute('data-theme');
+  const next = curr === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('canteen-theme', next);
+  updateThemeIcons();
+});
+
+// ══════════════════════════════════════════════════════════════════
+// NAV SCROLL EFFECT
+// ══════════════════════════════════════════════════════════════════
+const nav = document.getElementById('main-nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 10);
+}, { passive: true });
+
+// ══════════════════════════════════════════════════════════════════
+// SELECTOR STATE
+// ══════════════════════════════════════════════════════════════════
+function selectWeather(btn) {
+  document.querySelectorAll('.weather-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
+}
+
+function selectMeal(btn) {
+  document.querySelectorAll('.segment-btn').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
+}
+
+function selectEvent(btn) {
+  document.querySelectorAll('.event-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ML PREDICTION ENGINE
+// ══════════════════════════════════════════════════════════════════
+const FOOD_ITEMS = [
+  { name: 'Dal Rice',   emoji: '🍛', weight: 0.28, category: 'Staple'   },
+  { name: 'Biryani',    emoji: '🍚', weight: 0.22, category: 'Rice'     },
+  { name: 'Sandwich',   emoji: '🥪', weight: 0.18, category: 'Snack'    },
+  { name: 'Samosa',     emoji: '🥟', weight: 0.16, category: 'Snack'    },
+  { name: 'Chai',       emoji: '🍵', weight: 0.16, category: 'Beverage' },
+];
+
+const MEAL_BASE = { breakfast: 80, lunch: 200, dinner: 120 };
+
+const DAY_WEIGHTS = {
+  0: 1.10, 1: 1.15, 2: 1.05, 3: 1.20, 4: 1.10,  // Mon–Fri
+  5: 0.70, 6: 0.60                                 // Sat, Sun
+};
+
+const WEATHER_WEIGHTS = {
+  sunny: 1.00, rainy: 1.15, cold: 1.20, hot: 0.90
+};
+
+const EVENT_WEIGHTS = {
+  none: 1.00, exam: 1.40, holiday: 0.50, festival: 1.60
+};
+
+// Meal-specific item weights (how each item shifts per meal)
+const ITEM_MEAL_MOD = {
+  breakfast: [0.80, 0.50, 1.40, 1.20, 1.60],
+  lunch:     [1.20, 1.50, 0.80, 0.70, 0.80],
+  dinner:    [1.10, 1.30, 0.90, 0.90, 0.70],
+};
+
+function noise(min = 0.92, max = 1.08) {
+  return min + Math.random() * (max - min);
+}
+
+function getConfidence(day, meal, weather, event) {
+  let score = 50;
+  if ([1, 3].includes(day)) score += 15; // Tue/Thu peak days
+  if (meal === 'lunch') score += 10;
+  if (weather === 'rainy' || weather === 'cold') score += 8;
+  if (event === 'exam' || event === 'festival') score += 12;
+  if (day >= 5) score -= 10; // weekends less predictable
+  score = Math.min(99, Math.max(72, score));
+  return score;
+}
+
+function getStatus(portions, base) {
+  const ratio = portions / base;
+  if (ratio > 1.35) return 'red';
+  if (ratio > 1.10) return 'amber';
+  return 'green';
+}
+
+function predict(day, meal, weather, event) {
+  const base    = MEAL_BASE[meal];
+  const dayW    = DAY_WEIGHTS[day];
+  const weatherW= WEATHER_WEIGHTS[weather];
+  const eventW  = EVENT_WEIGHTS[event];
+  const mealMods= ITEM_MEAL_MOD[meal];
+
+  return FOOD_ITEMS.map((item, i) => {
+    const raw = base * dayW * weatherW * eventW * item.weight * mealMods[i] * noise() * 5.2;
+    const portions = Math.max(10, Math.round(raw * 1.05));
+    const conf = Math.round(getConfidence(day, meal, weather, event) * noise(0.95, 1.02));
+    const status = getStatus(portions, base * item.weight * mealMods[i] * 5.2);
+    return { ...item, portions, conf, status };
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ANIMATED COUNT-UP
+// ══════════════════════════════════════════════════════════════════
+function animateCount(el, target, duration = 700) {
+  const start = performance.now();
+  const from = parseInt(el.textContent) || 0;
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(from + (target - from) * ease);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RUN PREDICTION
+// ══════════════════════════════════════════════════════════════════
+function runPrediction() {
+  const day     = parseInt(document.getElementById('day-select').value);
+  const meal    = document.querySelector('.segment-btn.active').dataset.meal;
+  const weather = document.querySelector('.weather-btn.active').dataset.weather;
+  const event   = document.querySelector('.event-btn.active').dataset.event;
+
+  const results = predict(day, meal, weather, event);
+  const conf    = getConfidence(day, meal, weather, event);
+  const maxP    = Math.max(...results.map(r => r.portions));
+
+  // Show card
+  const card = document.getElementById('results-card');
+  card.classList.add('visible');
+  document.getElementById('confidence-badge').textContent = `Confidence: ${conf}%`;
+
+  // Food item cards
+  const grid = document.getElementById('food-items-grid');
+  grid.innerHTML = results.map(r => `
+    <div class="food-item-card">
+      <div class="food-item-name">${r.emoji} ${r.name}</div>
+      <div class="food-item-portions" style="color:var(--color-${r.status === 'green' ? 'accent' : r.status === 'amber' ? 'amber' : 'red'})" data-target="${r.portions}">0</div>
+      <div class="food-item-meta">
+        <span class="food-item-conf">Conf: ${r.conf}%</span>
+        <span class="status-dot ${r.status}" title="${r.status} demand"></span>
+      </div>
+    </div>
+  `).join('');
+
+  // Animate count-up
+  grid.querySelectorAll('.food-item-portions').forEach(el => {
+    animateCount(el, parseInt(el.dataset.target));
+  });
+
+  // Bar chart
+  const chart = document.getElementById('bar-chart');
+  chart.innerHTML = results.map(r => `
+    <div class="bar-row">
+      <span class="bar-label">${r.emoji} ${r.name}</span>
+      <div class="bar-track">
+        <div class="bar-fill ${r.status}" data-width="${Math.round((r.portions / maxP) * 100)}"></div>
+      </div>
+      <span class="bar-val">${r.portions}</span>
+    </div>
+  `).join('');
+
+  // Animate bars
+  requestAnimationFrame(() => {
+    chart.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  });
+
+  // Scroll to results
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 7-DAY FORECAST TABLE
+// ══════════════════════════════════════════════════════════════════
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const EVENTS_7DAY = [null, null, 'exam', null, 'exam', null, 'holiday'];
+const EVENT_LABELS = { exam: 'Exam Week', holiday: 'Holiday', festival: 'Festival' };
+const EVENT_CLASSES = { exam: 'exam', holiday: 'holiday', festival: 'fest' };
+
+function forecastDay(dayIdx, meal) {
+  const base = MEAL_BASE[meal];
+  const total = base * DAY_WEIGHTS[dayIdx]
+    * (EVENTS_7DAY[dayIdx] ? EVENT_WEIGHTS[EVENTS_7DAY[dayIdx]] : 1.0)
+    * noise(0.93, 1.07);
+  return Math.round(total);
+}
+
+function trendArrow(val, ref) {
+  if (val > ref * 1.05) return '<span class="trend-arrow trend-up" aria-label="trending up">↑</span>';
+  if (val < ref * 0.95) return '<span class="trend-arrow trend-down" aria-label="trending down">↓</span>';
+  return '<span class="trend-arrow trend-flat" aria-label="stable">→</span>';
+}
+
+function buildForecastTable() {
+  const tbody = document.getElementById('forecast-tbody');
+  const refB = forecastDay(0, 'breakfast');
+  const refL = forecastDay(0, 'lunch');
+  const refD = forecastDay(0, 'dinner');
+  tbody.innerHTML = DAYS.map((day, i) => {
+    const b = forecastDay(i, 'breakfast');
+    const l = forecastDay(i, 'lunch');
+    const d = forecastDay(i, 'dinner');
+    const ev = EVENTS_7DAY[i];
+    const evHtml = ev
+      ? `<span class="event-flag ${EVENT_CLASSES[ev]}">${EVENT_LABELS[ev]}</span>`
+      : `<span style="color:var(--ink-4);font-size:var(--fs-xs)">—</span>`;
+    return `
+      <tr>
+        <td>${day}</td>
+        <td>${b} ${trendArrow(b, refB)}</td>
+        <td>${l} ${trendArrow(l, refL)}</td>
+        <td>${d} ${trendArrow(d, refD)}</td>
+        <td>${evHtml}</td>
+      </tr>
+    `;
+  }).join('');
+}
+buildForecastTable();
+
+// ══════════════════════════════════════════════════════════════════
+// FEATURE IMPORTANCE CHART
+// ══════════════════════════════════════════════════════════════════
+const FI_DATA = [
+  { label: 'Rolling Avg (7d + 30d)', pct: 25 },
+  { label: 'Day × Meal Time',        pct: 20 },
+  { label: 'Event Severity + Type',  pct: 18 },
+  { label: 'Occupancy Rate',         pct: 15 },
+  { label: 'Weather + Temperature',  pct: 10 },
+  { label: 'Item Popularity',        pct:  7 },
+  { label: 'Feedback & Ratings',     pct:  5 },
+];
+
+function buildFIChart() {
+  const container = document.getElementById('fi-chart');
+  const rows = FI_DATA.map(d => `
+    <div class="fi-row">
+      <span class="fi-label">${d.label}</span>
+      <div class="fi-track">
+        <div class="fi-fill" data-width="${d.pct * 4}"></div>
+      </div>
+      <span class="fi-pct">${d.pct}%</span>
+    </div>
+  `).join('');
+  container.innerHTML += rows;
+  // Animate on intersection
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        container.querySelectorAll('.fi-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(container);
+}
+buildFIChart();
+
+// ══════════════════════════════════════════════════════════════════
+// INTERSECTION OBSERVER — trigger section animations
+// ══════════════════════════════════════════════════════════════════
+const sections = document.querySelectorAll('.section');
+const sectionObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('anim-fade-in');
+    }
+  });
+}, { threshold: 0.08 });
+sections.forEach(s => sectionObserver.observe(s));
+</script>
+</body>
+</html>
